@@ -1,0 +1,290 @@
+﻿@{
+    ViewData["Title"] = "Giới thiệu";
+}
+
+<style>
+    .about-hero {
+        --grad1: #153b5f;
+        --grad2: #1d5a8a;
+        background: linear-gradient(135deg, var(--grad1), var(--grad2));
+        color: #fff;
+        position: relative;
+    }
+
+        .about-hero .breadcrumb a {
+            color: rgba(255,255,255,.85);
+            text-decoration: none;
+        }
+
+        .about-hero .breadcrumb .active {
+            color: #fff;
+        }
+
+    .icon-pill {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef5ff;
+        color: #0d6efd;
+        font-size: 1.1rem;
+    }
+
+    .soft-card {
+        border: 1px solid #edf1f7;
+    }
+
+        .soft-card:hover {
+            box-shadow: 0 10px 25px rgba(13,110,253,.08);
+        }
+
+    .kv-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .4rem 0;
+        border-bottom: 1px dashed #eee;
+    }
+
+        .kv-row .label {
+            color: #6b7280;
+        }
+
+    .check-list {
+        list-style: none;
+        padding-left: 0;
+    }
+
+        .check-list li {
+            padding-left: 1.75rem;
+            position: relative;
+            margin: .35rem 0;
+        }
+
+            .check-list li:before {
+                content: "\f00c";
+                font-family: "Font Awesome 6 Free";
+                font-weight: 900;
+                color: #0d6efd;
+                position: absolute;
+                left: 0;
+                top: .15rem;
+            }
+
+    .timeline {
+        position: relative;
+        padding-left: 1.25rem;
+    }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: .35rem;
+            top: .2rem;
+            bottom: .2rem;
+            width: 2px;
+            background: #e5e7eb;
+        }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -.05rem;
+            top: .35rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #0d6efd;
+            box-shadow: 0 0 0 3px #e7f1ff;
+        }
+</style>
+
+<!-- HERO -->
+<section class="about-hero py-4 py-lg-5">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb m-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Giới thiệu</li>
+            </ol>
+        </nav>
+
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <h1 class="display-6 fw-bold mb-2">Giới thiệu nền tảng đấu giá trực tuyến</h1>
+                <p class="lead mb-0 opacity-90">
+                    AuctionSite cung cấp giải pháp đấu giá minh bạch, realtime, dễ sử dụng cho tổ chức và cá nhân —
+                    từ đăng tài sản, tổ chức phiên đấu giá đến chốt kết quả và lưu trữ hồ sơ.
+                </p>
+            </div>
+            <div class="col-lg-5">
+                <div class="row text-center row-cols-3 g-3">
+                    <div class="col">
+                        <div class="p-3 bg-white text-dark rounded-3">
+                            <div class="fw-bold fs-4">24/7</div>
+                            <div class="small text-muted">Vận hành</div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-3 bg-white text-dark rounded-3">
+                            <div class="fw-bold fs-4">Realtime</div>
+                            <div class="small text-muted">Cập nhật giá</div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-3 bg-white text-dark rounded-3">
+                            <div class="fw-bold fs-4">Bảo mật</div>
+                            <div class="small text-muted">Chuẩn OWASP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- BODY -->
+<div class="container my-5">
+    <div class="row g-4">
+        <!-- MAIN CONTENT -->
+        <div class="col-lg-8">
+            <div class="card soft-card shadow-sm border-0">
+                <div class="card-body p-4 p-lg-5">
+                    <h2 class="h4 mb-3">1. Tổng quan</h2>
+                    <p>
+                        AuctionSite là nền tảng đấu giá trực tuyến vận hành theo mô hình “marketplace”,
+                        hỗ trợ <strong>đăng, quản lý tài sản</strong>, <strong>tổ chức phiên đấu giá</strong>
+                        cùng các tiện ích đi kèm như <em>
+                            đăng ký tham gia, đặt trước, nộp tiền đặt cọc,
+                            đặt giá realtime, nhật ký sự kiện
+                        </em>.
+                    </p>
+
+                    <div class="row row-cols-1 row-cols-md-2 g-3 my-3">
+                        <div class="col">
+                            <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-light">
+                                <div class="icon-pill"><i class="fa-solid fa-shield-check"></i></div>
+                                <div>
+                                    <div class="fw-semibold">Minh bạch – công khai</div>
+                                    <div class="small text-muted">Công bố thông tin phiên, nhật ký đặt giá rõ ràng.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-light">
+                                <div class="icon-pill"><i class="fa-solid fa-bolt"></i></div>
+                                <div>
+                                    <div class="fw-semibold">Realtime mượt mà</div>
+                                    <div class="small text-muted">SignalR cập nhật giá theo thời gian thực.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-light">
+                                <div class="icon-pill"><i class="fa-solid fa-lock"></i></div>
+                                <div>
+                                    <div class="fw-semibold">An toàn – bảo mật</div>
+                                    <div class="small text-muted">Xác thực, phân quyền, chống thao túng giá.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-light">
+                                <div class="icon-pill"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                                <div>
+                                    <div class="fw-semibold">Tối ưu di động</div>
+                                    <div class="small text-muted">Hoạt động tốt trên điện thoại &amp; máy tính.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="h4 mt-4 mb-2">2. Chức năng – nghiệp vụ</h2>
+                    <ul class="check-list">
+                        <li>Đăng tài sản: mô tả, hình ảnh, tài liệu; thiết lập giá khởi điểm, giá dự phòng.</li>
+                        <li>Tạo phiên đấu giá: thời gian bắt đầu/kết thúc, bước giá, tổ chức, đấu giá viên.</li>
+                        <li>Đăng ký tham gia &amp; nộp cọc (QR, thẻ, chuyển khoản – tùy tích hợp).</li>
+                        <li>Đặt giá realtime, quy tắc bước giá, tự động khóa khi hết giờ.</li>
+                        <li>Thông báo, biên bản kết quả, lưu trữ hồ sơ điện tử.</li>
+                    </ul>
+
+                    <h2 class="h4 mt-4 mb-2">3. Lộ trình phát triển</h2>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="fw-semibold">2025 Q1 – Phiên bản nền tảng</div>
+                            <div class="text-muted small">Hoàn thiện đăng tài sản, tạo phiên, đặt giá realtime.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="fw-semibold">2025 Q2 – Thanh toán &amp; eKYC</div>
+                            <div class="text-muted small">Tích hợp cổng thanh toán/QR; xác thực danh tính.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="fw-semibold">2025 Q3 – Báo cáo &amp; API</div>
+                            <div class="text-muted small">Báo cáo đa chiều, kết nối hệ thống đối tác qua API.</div>
+                        </div>
+                    </div>
+
+                    <h2 class="h4 mt-4 mb-2">4. Cam kết</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="kv-row"><div class="label">Minh bạch dữ liệu</div><div>100%</div></div>
+                            <div class="kv-row"><div class="label">Uptime cam kết</div><div>≥ 99.5%</div></div>
+                            <div class="kv-row"><div class="label">Thời gian phản hồi</div><div>&lt; 24 giờ</div></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="kv-row"><div class="label">Hỗ trợ người dùng</div><div>Miễn phí</div></div>
+                            <div class="kv-row"><div class="label">Bảo mật</div><div>OWASP + best-practices</div></div>
+                            <div class="kv-row"><div class="label">Sao lưu</div><div>Hàng ngày</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="icon-pill"><i class="fa-solid fa-building"></i></div>
+                        <div>
+                            <div class="fw-semibold">Thông tin liên hệ</div>
+                            <div class="small text-muted">Chúng tôi luôn sẵn sàng hỗ trợ</div>
+                        </div>
+                    </div>
+                    <div class="kv-row"><div class="label">Địa chỉ</div><div class="text-end">Thái Nguyên, Việt Nam</div></div>
+                    <div class="kv-row"><div class="label">Điện thoại</div><div class="text-end">0123 456 789</div></div>
+                    <div class="kv-row"><div class="label">Email</div><div class="text-end">support@auctionsite.local</div></div>
+                    <a asp-controller="Home" asp-action="Contact" class="btn btn-primary w-100 mt-3">
+                        Liên hệ ngay
+                    </a>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="icon-pill"><i class="fa-solid fa-certificate"></i></div>
+                        <div>
+                            <div class="fw-semibold">Tiêu chuẩn &amp; vận hành</div>
+                            <div class="small text-muted">Quy trình kiểm soát chất lượng</div>
+                        </div>
+                    </div>
+                    <ul class="check-list mb-0">
+                        <li>Quy trình duyệt tài sản nhiều bước</li>
+                        <li>Nhật ký thao tác, truy vết đầy đủ</li>
+                        <li>Phân quyền rõ ràng theo vai trò</li>
+                        <li>Sao lưu &amp; khôi phục dữ liệu</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

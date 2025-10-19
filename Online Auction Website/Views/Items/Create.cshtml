@@ -1,0 +1,371 @@
+﻿@model OnlineAuctionWebsite.Models.ViewModels.AuctionItemCreateVM
+@{
+    ViewData["Title"] = "Đăng sản phẩm đấu giá";
+}
+
+<div class="container py-5">
+    <h1 class="mb-4 text-primary"><i class="fa-solid fa-gavel me-2"></i>@ViewData["Title"]</h1>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <!-- Thông tin chung -->
+                <h5 class="mb-3 text-secondary">📋 Thông tin chung</h5>
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label fw-semibold">Tiêu đề</label>
+                    <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề..." />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label for="Description" class="form-label fw-semibold mb-0">Mô tả chi tiết</label>
+
+                        <div class="btn-toolbar gap-2">
+                            <button type="button" id="aiSuggestBtn" class="btn btn-outline-primary btn-sm">
+                                ✨ Gợi ý mô tả
+                            </button>
+                            <button type="button" id="aiGenBtn" class="btn btn-outline-secondary btn-sm">
+                                🧠 Tạo mô tả từ form/ảnh
+                            </button>
+                        </div>
+                    </div>
+
+                    <textarea id="Description" name="Description" class="form-control" rows="8"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="AssetCode" class="form-label fw-bold"></label>
+                    <input asp-for="AssetCode" class="form-control" placeholder="VD: MTS-001" />
+                    <span asp-validation-for="AssetCode" class="text-danger"></span>
+                </div>
+
+                <!-- Giá cả -->
+                <h5 class="mt-4 mb-3 text-secondary">💰 Giá cả</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="StartingPrice" class="form-label fw-bold"></label>
+                        <input asp-for="StartingPrice" type="number" step="0.01" class="form-control" />
+                        <span asp-validation-for="StartingPrice" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ReservePrice" class="form-label fw-bold"></label>
+                        <input asp-for="ReservePrice" type="number" step="0.01" class="form-control" />
+                        <span asp-validation-for="ReservePrice" class="text-danger"></span>
+                    </div>
+
+                    <!-- NEW: MinIncrement & DepositAmount -->
+                    <div class="col-md-6">
+                        <label asp-for="MinIncrement" class="form-label fw-bold"></label>
+                        <input asp-for="MinIncrement" type="number" step="0.01" class="form-control" />
+                        <span asp-validation-for="MinIncrement" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="DepositAmount" class="form-label fw-bold"></label>
+                        <input asp-for="DepositAmount" type="number" step="0.01" class="form-control" />
+                        <span asp-validation-for="DepositAmount" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Danh mục -->
+                <h5 class="mt-4 mb-3 text-secondary">📂 Danh mục</h5>
+                <div class="mb-3">
+                    <label asp-for="CategoryId" class="form-label fw-bold"></label>
+                    <select asp-for="CategoryId" class="form-select">
+                        <option value="">-- Chọn danh mục --</option>
+                        @foreach (var cat in ViewBag.Categories)
+                        {
+                            <option value="@cat.Id">@cat.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                </div>
+
+                <h5 class="mt-4 mb-3 text-secondary">🏷 Tags</h5>
+                <div class="mb-3">
+                    <input asp-for="Tags" class="form-control" placeholder="Ví dụ: xe máy, nhà đẩt,..." />
+                    <span class="text-muted small">Ngăn cách bằng dấu phẩy.</span>
+                </div>
+
+                <!-- Thời gian đấu giá -->
+                <h5 class="mt-4 mb-3 text-secondary">⏳ Thời gian đấu giá (UTC)</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="AuctionStartUtc" class="form-label fw-bold"></label>
+                        <input asp-for="AuctionStartUtc" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="AuctionStartUtc" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="AuctionEndUtc" class="form-label fw-bold"></label>
+                        <input asp-for="AuctionEndUtc" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="AuctionEndUtc" class="text-danger"></span>
+                    </div>
+                    <input type="hidden" name="tzOffset" id="tzOffset" />
+                </div>
+
+                <!-- NEW: Thông tin đấu giá -->
+                <h5 class="mt-4 mb-3 text-secondary">📢 Thông tin đấu giá</h5>
+                <div class="mb-3">
+                    <label asp-for="OrganizationName" class="form-label fw-bold">Tổ chức đấu giá tài sản</label>
+                    <input asp-for="OrganizationName" class="form-control" placeholder="Tên tổ chức..." />
+                    <span asp-validation-for="OrganizationName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="AuctioneerName" class="form-label fw-bold">Đấu giá viên</label>
+                    <input asp-for="AuctioneerName" class="form-control" placeholder="Tên đấu giá viên (nếu có)..." />
+                    <span asp-validation-for="AuctioneerName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="OrganizationAddress" class="form-label fw-bold">Địa chỉ</label>
+                    <input asp-for="OrganizationAddress" class="form-control" placeholder="Địa chỉ tổ chức..." />
+                    <span asp-validation-for="OrganizationAddress" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="BidCooldownSeconds" class="form-label fw-bold"></label>
+                    <input asp-for="BidCooldownSeconds" type="number" class="form-control" />
+                    <span asp-validation-for="BidCooldownSeconds" class="text-danger"></span>
+                </div>
+
+                <!-- Hình ảnh -->
+                <h5 class="mt-4 mb-3 text-secondary">🖼 Hình ảnh sản phẩm</h5>
+                <div class="mb-3">
+                    <input asp-for="Images" type="file" class="form-control" accept="image/*" multiple onchange="previewImage(event)" />
+                    <div class="form-text">Chọn một hoặc nhiều ảnh (JPEG, PNG) ≤ 5MB</div>
+                    <div id="imagePreview" class="mt-3 d-flex flex-wrap gap-2"></div>
+                </div>
+
+                <h5 class="mt-4 mb-3 text-secondary">📎 Tài liệu liên quan</h5>
+                <div class="mb-3">
+                    <input asp-for="Documents" type="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg" multiple />
+                    <div class="form-text">PDF/DOC/XLS hoặc ảnh scan, nhiều file.</div>
+                </div>
+
+                <input type="hidden" name="IsPrivate" value="false" />
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="IsPrivate"
+                       name="IsPrivate"
+                       value="true" @(Model.IsPrivate ? "checked" : "") />
+                <label class="form-check-label" for="IsPrivate">Phiên riêng tư (invite-only)</label>
+                <input class="form-control mt-2" name="InviteUserEmails"
+                       placeholder="moi1@abc.com, moi2@abc.com (tùy chọn)" />
+
+                <!-- Submit -->
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Đăng bài
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <!-- Preview ảnh an toàn, tránh rò rỉ URL -->
+    <script>
+        function previewImage(e) {
+            const files = e.target.files;
+            const preview = document.getElementById('imagePreview');
+            // Revoke các URL cũ trước khi clear
+            [...preview.querySelectorAll('img')].forEach(img => {
+                if (img.dataset.url) URL.revokeObjectURL(img.dataset.url);
+            });
+            preview.innerHTML = '';
+
+            if (!files || !files.length) return;
+
+            [...files].forEach(file => {
+                const url = URL.createObjectURL(file);
+                const img = document.createElement('img');
+                img.src = url;
+                img.dataset.url = url;
+                img.classList.add('img-thumbnail');
+                img.style.maxHeight = '150px';
+                img.onload = () => URL.revokeObjectURL(url); // an toàn thêm
+                preview.appendChild(img);
+            });
+        }
+    </script>
+
+    <!-- Helpers chung -->
+    <script>
+        // Đọc JSON an toàn 1 lần (tránh "body stream already read")
+        async function safeJson(res) {
+            const ct = (res.headers.get('content-type') || '').toLowerCase();
+            if (ct.includes('application/json')) {
+                return await res.json();
+            }
+            const text = await res.text();
+            try { return JSON.parse(text); }
+            catch { return { ok: false, error: text || 'Unexpected response' }; }
+        }
+
+        // Spinner cho nút
+        function setBtnBusy(btn, busyText) {
+            if (!btn) return () => {};
+            const oldHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>${busyText}`;
+            return () => { btn.disabled = false; btn.innerHTML = oldHTML; };
+        }
+
+        // Lấy anti-forgery (nếu có)
+        function getAntiXsrf() {
+            return (
+                document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
+                document.querySelector('meta[name="RequestVerificationToken"]')?.content ||
+                ''
+            );
+        }
+
+        // Tự resize textarea mô tả để gõ mượt hơn
+        (function autoGrow() {
+            const ta = document.getElementById('Description');
+            if (!ta) return;
+            const resize = () => {
+                ta.style.height = 'auto';
+                ta.style.height = Math.min(ta.scrollHeight, 800) + 'px';
+            };
+            ['input', 'change'].forEach(ev => ta.addEventListener(ev, resize));
+            setTimeout(resize, 0);
+        })();
+
+        // Điền tzOffset (phút, theo chuẩn JS)
+        (function setTz() {
+            const tz = document.getElementById('tzOffset');
+            if (tz) tz.value = new Date().getTimezoneOffset();
+        })();
+    </script>
+
+    <!-- GỢI Ý NHANH TỪ TITLE/NOTES -->
+    <script>
+        (function () {
+            const btn = document.getElementById('aiSuggestBtn');
+            if (!btn) return;
+
+            btn.addEventListener('click', async () => {
+                const title = document.getElementById('Title')?.value?.trim() || '';
+                const notes = document.getElementById('ShortNote')?.value?.trim() || '';
+
+                if (!title && !notes) {
+                    alert('Vui lòng nhập ít nhất Tiêu đề trước khi gợi ý.');
+                    return;
+                }
+
+                const restore = setBtnBusy(btn, 'Đang gợi ý...');
+                const ac = new AbortController();
+                const timer = setTimeout(() => ac.abort(), 30000);
+
+                try {
+                    const res = await fetch('/ai/suggest-description', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, notes }),
+                        signal: ac.signal
+                    });
+                    const data = await safeJson(res);
+                    if (!data?.ok) {
+                        alert(data?.error || 'AI lỗi khi tạo gợi ý.');
+                        return;
+                    }
+                    const box = document.getElementById('Description');
+                    const insert = (data.text || '').trim();
+                    if (box && insert) {
+                        box.value = (box.value?.trim() ? box.value + "\n\n" : "") + insert;
+                        box.dispatchEvent(new Event('input')); // kích hoạt autoGrow
+                    }
+                } catch (e) {
+                    alert(e?.name === 'AbortError'
+                        ? 'Hết thời gian chờ AI. Thử lại nhé.'
+                        : (e?.message || e));
+                } finally {
+                    clearTimeout(timer);
+                    restore();
+                }
+            });
+        })();
+    </script>
+
+    <!-- TẠO MÔ TẢ GIÀU THÔNG TIN TỪ FORM + ẢNH -->
+    <script>
+        (function () {
+            const btn = document.getElementById('aiGenBtn');
+            if (!btn) return;
+
+            function collectFormForAi() {
+                const fd = new FormData();
+                // Anti-forgery
+                const token = getAntiXsrf();
+                if (token) fd.append('__RequestVerificationToken', token);
+
+                const $ = id => document.getElementById(id);
+
+                // Trường chính
+                fd.append('Title', $('#Title')?.value ?? '');
+                fd.append('CategoryName', document.querySelector('#CategoryId option:checked')?.text ?? '');
+                fd.append('StartingPrice', $('#StartingPrice')?.value ?? '');
+
+                // Trường mở rộng (nếu form có)
+                [
+                    'AssetCode', 'ReservePrice', 'MinIncrement', 'DepositAmount',
+                    'Condition', 'Brand', 'Year', 'Material', 'Dimensions',
+                    'Location', 'Notes'
+                ].forEach(id => {
+                    const el = $(id);
+                    if (el && el.value != null) fd.append(id, el.value);
+                });
+
+                // Ảnh — input asp-for="Images" sẽ có id="Images"
+                const files = $('#Images')?.files ?? [];
+                for (const f of files) fd.append('Images', f);
+
+                return fd;
+            }
+
+            btn.addEventListener('click', async () => {
+                const restore = setBtnBusy(btn, 'Đang tạo...');
+                const ac = new AbortController();
+                const timer = setTimeout(() => ac.abort(), 45000);
+
+                try {
+                    const fd = collectFormForAi();
+                    const res = await fetch('/ai/describe', {
+                        method: 'POST',
+                        body: fd,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        signal: ac.signal
+                    });
+
+                    const data = await safeJson(res);
+                    if (data?.ok) {
+                        const desc = document.getElementById('Description');
+                        if (desc) {
+                            desc.value = data.html || '';
+                            desc.dispatchEvent(new Event('input')); // kích hoạt autoGrow
+                        }
+                        // Optional: điền Tags nếu API trả về
+                        const tagsInput = document.getElementById('Tags');
+                        if (tagsInput && Array.isArray(data.tags) && data.tags.length) {
+                            tagsInput.value = data.tags.join(', ');
+                        }
+                    } else {
+                        alert(data?.error || 'Không tạo được mô tả. Vui lòng thử lại.');
+                    }
+                } catch (e) {
+                    alert(e?.name === 'AbortError'
+                        ? 'Hết thời gian chờ AI. Thử lại nhé.'
+                        : ('Lỗi kết nối AI: ' + (e?.message || e)));
+                } finally {
+                    clearTimeout(timer);
+                    restore();
+                }
+            });
+        })();
+    </script>
+}

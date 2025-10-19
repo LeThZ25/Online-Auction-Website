@@ -1,0 +1,78 @@
+﻿body {
+}
+
+.auth-container {
+    display: flex;
+    flex-wrap: wrap;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.auth-form {
+    flex: 1;
+    padding: 2rem;
+    min-width: 320px;
+}
+
+.auth-side {
+    flex: 1;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: #ff6600;
+    border: none;
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        flex-direction: column;
+    }
+}
+.register-wrap .form-label {
+    margin-bottom: .25rem
+}
+
+.register-wrap .section-title {
+    font-size: 1.05rem
+}
+
+.register-wrap .upload-box:hover {
+    background: #f6f8fa
+}
+/* Auth cards */
+.card {
+    border-radius: .75rem;
+}
+
+.btn {
+    border-radius: .6rem;
+}
+
+.form-control {
+    border-radius: .6rem;
+}
+
+/* Hover lift */
+.card:hover {
+    transform: translateY(-1px);
+    transition: .15s ease;
+}
+
+/* Make external buttons equal height */
+.btn + .btn {
+    margin-top: .5rem;
+}
+.ai-chat .bubble {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+}

@@ -1,0 +1,50 @@
+﻿@model OnlineAuctionWebsite.Models.Entities.AuctionSession
+@{
+    ViewData["Title"] = "Whitelist phiên #" + Model.Id;
+}
+<h3>Whitelist phiên @Model.Id - @Model.Item.Title</h3>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form class="row g-2" asp-action="AddToWhitelist" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="sessionId" value="@Model.Id" />
+            <div class="col-auto">
+                <input name="email" class="form-control" placeholder="Nhập email người dùng" />
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary">Thêm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.IsPrivate)
+{
+    <div class="alert alert-info">
+        Mã mời: <strong>@Model.InviteCode</strong> (chia sẻ cho người dùng để tự gia nhập whitelist).
+    </div>
+}
+
+<table class="table table-sm align-middle">
+    <thead>
+        <tr><th>Người dùng</th><th>Thời gian thêm</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var w in Model.Whitelist.OrderByDescending(x => x.CreatedAt))
+        {
+            <tr>
+                <td>@w.User.Email (@w.User.UserName)</td>
+                <td>@w.CreatedAt.ToLocalTime()</td>
+                <td class="text-end">
+                    <form asp-action="RemoveFromWhitelist" method="post" onsubmit="return confirm('Xoá khỏi whitelist?')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="sessionId" value="@Model.Id" />
+                        <input type="hidden" name="userId" value="@w.UserId" />
+                        <button class="btn btn-sm btn-outline-danger">Xoá</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

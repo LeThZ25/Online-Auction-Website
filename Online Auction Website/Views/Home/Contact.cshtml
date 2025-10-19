@@ -1,0 +1,57 @@
+﻿@model OnlineAuctionWebsite.Models.ViewModels.ContactVM
+@{
+    ViewData["Title"] = "Liên hệ";
+}
+<div class="container my-4">
+    <h1 class="section-title">Liên hệ</h1>
+    <div class="row g-4 mt-1">
+        <div class="col-lg-6">
+            @if (TempData["ContactOk"] is string ok)
+            {
+                <div class="alert alert-success">@ok</div>
+            }
+            <form method="post" class="card card-body shadow-sm">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Subject" class="form-label"></label>
+                    <input asp-for="Subject" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Message" class="form-label"></label>
+                    <textarea asp-for="Message" rows="5" class="form-control"></textarea>
+                    <span asp-validation-for="Message" class="text-danger"></span>
+                </div>
+                <button class="btn btn-primary">Gửi liên hệ</button>
+            </form>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Thông tin</h5>
+                    <ul class="list-unstyled text-muted">
+                        <li><i class="fa-solid fa-location-dot me-2"></i> Thái Nguyên, Việt Nam</li>
+                        <li><i class="fa-solid fa-phone me-2"></i> 0123 456 789</li>
+                        <li><i class="fa-solid fa-envelope me-2"></i> support@auctionsite.local</li>
+                    </ul>
+                    <div class="ratio ratio-16x9 mt-3">
+                        <iframe src="https://maps.google.com/maps?q=Thai%20Nguyen&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                                style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

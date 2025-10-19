@@ -1,0 +1,698 @@
+﻿@model OnlineAuctionWebsite.Models.Entities.AuctionItem
+@using System.Security.Claims
+@using OnlineAuctionWebsite.Models.Entities
+
+@{
+    var s = ViewBag.ActiveSession as AuctionSession;
+    bool isRegistered = ViewBag.IsRegistered as bool? ?? false;
+    bool isApproved = ViewBag.IsApproved as bool? ?? false;
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var hasInvite = ViewBag.HasInvite is bool h && h;
+    var isPrivate = s?.IsPrivate ?? false;
+    var related = (IEnumerable<OnlineAuctionWebsite.Models.Entities.AuctionItem>)(ViewBag.Related ?? Enumerable.Empty<OnlineAuctionWebsite.Models.Entities.AuctionItem>());
+    var highest = s?.Bids?.OrderByDescending(b => b.Amount).FirstOrDefault()?.Amount ?? Model.StartingPrice;
+    var minInc = s?.MinIncrement ?? 0m;
+    var budget = ViewBag.Budget as decimal?;
+    var overBudget = budget.HasValue && highest > budget.Value;
+    var canBid =
+     User.Identity!.IsAuthenticated && s != null &&
+     isApproved &&                                     
+     s.Status == AuctionSessionStatus.Live &&
+     DateTime.UtcNow >= s.StartUtc && DateTime.UtcNow < s.EndUtc &&
+     Model.SellerId != userId;                         
+    ViewData["Title"] = Model.Title;
+    var topBid = s?.Bids?
+        .OrderByDescending(b => b.Amount)
+        .ThenBy(b => b.CreatedAt)
+        .FirstOrDefault();
+    bool canSettle = User.Identity!.IsAuthenticated
+                     && s != null
+                     && s.Status == AuctionSessionStatus.Ended
+                     && topBid != null
+                     && topBid.BidderId == userId;
+    bool hasSettled = ViewBag.HasSettled as bool? ?? false;
+    bool canSeePrivate = ViewBag.CanSeePrivate is bool cp && cp;
+}
+
+@functions {
+    private static TimeZoneInfo Ict()
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById("Asia/Bangkok"); }            // Linux/macOS
+        catch { return TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); } // Windows
+    }
+    private static string AsIct(DateTime utc)
+    {
+        var u = utc.Kind == DateTimeKind.Utc ? utc : DateTime.SpecifyKind(utc, DateTimeKind.Utc);
+        return TimeZoneInfo.ConvertTimeFromUtc(u, Ict()).ToString("dd/MM/yyyy HH:mm");
+    }
+    private static string IsoUtc(DateTime dt)
+    {
+        var u = dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        return u.ToString("o"); // 2025-01-01T00:00:00.0000000Z
+    }
+}
+
+<style>
+    .sticky-card {
+        position: sticky;
+        top: 90px
+    }
+
+    .countdown-grid {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .5rem
+    }
+
+    .cd-box {
+        background: #f8f9fa;
+        border-radius: .5rem;
+        text-align: center;
+        padding: .5rem .25rem
+    }
+
+    .cd-num {
+        font-size: 1.35rem;
+        font-weight: 700;
+        line-height: 1
+    }
+
+    .thumbs {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap
+    }
+
+        .thumbs img {
+            height: 72px;
+            width: auto;
+            border-radius: .25rem;
+            cursor: pointer;
+            border: 1px solid #e5e7eb
+        }
+
+            .thumbs img.active {
+                outline: 3px solid #0d6efd
+            }
+
+    .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .35rem 0;
+        border-bottom: 1px dashed #eaeaea
+    }
+
+        .kv .label {
+            color: #6c757d
+        }
+
+    .section-title {
+        font-weight: 700;
+        font-size: 1.1rem
+    }
+
+    .admin-actions .btn {
+        min-width: 160px
+    }
+</style>
+
+<div class="container my-4">
+    <!-- breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Search" asp-action="Index">Tài sản đấu giá</a></li>
+            @if (Model.Category != null)
+            {
+                <li class="breadcrumb-item">
+                    <a asp-controller="Search" asp-action="Index" asp-route-categoryId="@Model.CategoryId">@Model.Category!.Name</a>
+                </li>
+            }
+            <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <h1 class="h4 mb-3">
+        @Model.Title
+        @if (isPrivate)
+        {
+            <span class="badge bg-dark align-middle ms-2">
+                <i class="fa-solid fa-lock me-1"></i>Phiên riêng tư
+            </span>
+        }
+    </h1>
+
+    <div class="row g-4">
+        <!-- LEFT -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    @{
+                        var cover = Model.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.FilePath ?? "/images/placeholder.png";
+                    }
+                    <img id="mainImg" src="@cover" class="img-fluid rounded w-100 mb-2" alt="Ảnh tài sản">
+
+                    <div class="thumbs">
+                        @foreach (var img in Model.Images.OrderBy(i => i.SortOrder))
+                        {
+                            <img src="@img.FilePath" data-full="@img.FilePath" alt="thumb">
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-pills mt-3" id="itemTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-desc" type="button" role="tab">Mô tả tài sản</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-auctioninfo" type="button" role="tab">Thông tin đấu giá</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-docs" type="button" role="tab">Tài liệu liên quan</button>
+                </li>
+            </ul>
+            <div class="tab-content border rounded-bottom p-3 bg-white">
+                <div id="tab-desc" class="tab-pane fade show active" role="tabpanel">
+                    <div class="section-title mb-2">Mô tả tài sản</div>
+                    <div>@Html.Raw(Model.DescriptionHtml ?? "")</div>
+                </div>
+
+                <div id="tab-auctioninfo" class="tab-pane fade" role="tabpanel">
+                    <div class="section-title mb-2">Thông tin đấu giá</div>
+                    @if (s != null)
+                    {
+                        <div class="kv"><div class="label">Bắt đầu trả giá:</div><div>@AsIct(s.StartUtc)</div></div>
+                        <div class="kv"><div class="label">Kết thúc trả giá:</div><div>@AsIct(s.EndUtc)</div></div>
+                        <div class="kv"><div class="label">Bước giá:</div><div>@minInc.ToString("N0")</div></div>
+                        <div class="kv"><div class="label">Giá dự phòng:</div><div>@(Model.ReservePrice?.ToString("N0") ?? "-")</div></div>
+                        <div class="kv"><div class="label">Mã tài sản:</div><div>@Model.AssetCode</div></div>
+                        <div class="kv"><div class="label">Tổ chức đấu giá:</div><div>@s.OrganizationName</div></div>
+                        @if (!string.IsNullOrWhiteSpace(s.AuctioneerName))
+                        {
+                            <div class="kv"><div class="label">Đấu giá viên:</div><div>@s.AuctioneerName</div></div>
+                        }
+                        <div class="kv"><div class="label">Địa chỉ:</div><div>@s.OrganizationAddress</div></div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">Chưa có phiên đấu giá cho tài sản này.</div>
+                    }
+                </div>
+
+                <div id="tab-docs" class="tab-pane fade" role="tabpanel">
+                    <div class="section-title mb-2">Tài liệu liên quan</div>
+                    <div class="text-muted">Chưa có tài liệu đính kèm.</div>
+                </div>
+            </div>
+
+            <!-- Info org -->
+            @if (s != null)
+            {
+                <div class="card mt-4">
+                    <div class="card-header fw-bold">Thông tin tổ chức hành nghề đấu giá tài sản</div>
+                    <div class="card-body">
+                        <p><strong>Tổ chức đấu giá tài sản:</strong> @s.OrganizationName</p>
+                        @if (!string.IsNullOrWhiteSpace(s.AuctioneerName))
+                        {
+                            <p><strong>Đấu giá viên:</strong> @s.AuctioneerName</p>
+                        }
+                        <p><strong>Địa chỉ:</strong> @s.OrganizationAddress</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- RIGHT -->
+        <div class="col-lg-5">
+            <div class="card sticky-card shadow-sm">
+                <div class="card-body">
+                    <div class="mb-2 text-muted">Bắt đầu:<br /><strong>@(s == null ? "-" : AsIct(s.StartUtc))</strong></div>
+                    <div class="mb-3 text-muted">Kết thúc:<br /><strong id="endLocal">@(s == null ? "-" : AsIct(s.EndUtc))</strong></div>
+
+                    @if (s != null)
+                    {
+                        <!-- countdown -->
+                        <div class="countdown-grid mb-3" id="cd" data-end="@(IsoUtc(s.EndUtc))">
+                            <div class="cd-box"><div class="cd-num" id="cd-d">--</div><div>ngày</div></div>
+                            <div class="cd-box"><div class="cd-num" id="cd-h">--</div><div>giờ</div></div>
+                            <div class="cd-box"><div class="cd-num" id="cd-m">--</div><div>phút</div></div>
+                            <div class="cd-box"><div class="cd-num" id="cd-s">--</div><div>giây</div></div>
+                        </div>
+
+                        <div class="kv"><div class="label">Giá khởi điểm:</div><div>@Model.StartingPrice.ToString("N0")</div></div>
+                        <div class="kv"><div class="label">Giá hiện tại:</div><div id="currentPrice">@highest.ToString("N0")</div></div>
+                        <div class="kv"><div class="label">Bước giá:</div><div>@minInc.ToString("N0")</div></div>
+                        <div class="kv"><div class="label">Mã tài sản:</div><div>@Model.AssetCode</div></div>
+
+                        <div class="d-grid mt-3">
+                            @if (!User.Identity!.IsAuthenticated)
+                            {
+                                <a class="btn btn-danger btn-lg"
+                                   asp-controller="Account" asp-action="Login"
+                                   asp-route-returnUrl="@Context.Request.Path">
+                                    Đăng nhập để đăng ký
+                                </a>
+                            }
+                            @if (s == null)
+                            {
+                                <div class="alert alert-warning">Chưa có phiên đấu giá.</div>
+                            }
+                            else if (s.IsPrivate && !canSeePrivate)
+                            {
+                                <div class="alert alert-warning">
+                                    Đây là <strong>phiên đấu giá riêng tư</strong>. Bạn chưa được cấp quyền xem/đăng ký.
+                                </div>
+
+                                @if (User.Identity!.IsAuthenticated)
+                                {
+                                    <form class="d-flex gap-2"
+                                          asp-controller="Sessions" asp-action="JoinByCode" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="sessionId" value="@s.Id" />
+                                        <input name="code" class="form-control" placeholder="Nhập mã mời..." />
+                                        <button class="btn btn-primary">Tham gia</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-primary"
+                                       asp-controller="Account" asp-action="Login"
+                                       asp-route-returnUrl="@Context.Request.Path">
+                                        Đăng nhập để nhập mã mời
+                                    </a>
+                                }
+                            }
+                            else if (s.EndUtc <= DateTime.UtcNow)
+                            {
+                                <button class="btn btn-secondary btn-lg" disabled>Phiên đã kết thúc</button>
+                            }
+                            else if (isPrivate && !hasInvite && !(User.IsInRole("Admin") || userId == Model.SellerId))
+                            {
+                                <button class="btn btn-outline-secondary btn-lg" disabled>
+                                    <i class="fa-solid fa-lock me-1"></i>Phiên riêng tư (bạn chưa được mời)
+                                </button>
+                            }
+                            else if (isRegistered)
+                            {
+                                <button class="btn btn-outline-secondary btn-lg" disabled>Đã đăng ký tham gia</button>
+                            }
+                            else
+                            {
+                                <form asp-controller="Sessions" asp-action="Register" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="sessionId" value="@s.Id" />
+                                    <button class="btn btn-danger btn-lg">Đăng ký tham gia đấu giá</button>
+                                </form>
+                                @if (isPrivate && hasInvite)
+                                {
+                                    <div class="small text-muted mt-2">
+                                        <i class="fa-regular fa-envelope-open me-1"></i>Bạn đã được mời – hãy đăng ký để tham gia.
+                                    </div>
+                                }
+                            }
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <hr />
+                                <div class="row g-2">
+                                    <div class="col-12 col-sm-4">
+                                        <form asp-controller="Sessions" asp-action="StartNow" method="post" class="d-grid">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@s.Id" />
+                                            <button class="btn btn-success w-100">Bật phiên ngay</button>
+                                        </form>
+                                    </div>
+                                    <div class="col-12 col-sm-4">
+                                        <form asp-controller="Sessions" asp-action="EndNow" method="post" class="d-grid">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@s.Id" />
+                                            <button class="btn btn-outline-danger w-100">Kết thúc ngay</button>
+                                        </form>
+                                    </div>
+                                    <div class="col-12 col-sm-4">
+                                        <form asp-controller="Items" asp-action="AdminDelete" method="post" class="d-grid" onsubmit="return confirm('Xoá tài sản này?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@Model.Id" />
+                                            <button class="btn btn-outline-secondary w-100">Xoá tài sản</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (s != null && (User.IsInRole("Admin") || Model.SellerId == userId))
+                            {
+                                <div class="d-grid mt-2">
+                                    <a class="btn btn-outline-secondary"
+                                       asp-controller="Invites" asp-action="Manage"
+                                       asp-route-sessionId="@s.Id">
+                                        <i class="fa-solid fa-user-plus me-1"></i> Quản lý lời mời
+                                    </a>
+                                </div>
+
+                                @if (s.IsPrivate)
+                                {
+                                    <div class="small text-muted mt-1">
+                                        <span class="badge bg-secondary">
+                                            <i class="fa-solid fa-lock me-1"></i> Riêng tư
+                                        </span>
+                                        — Chỉ người được mời mới tham gia.
+                                    </div>
+                                }
+                            }
+
+                            @if (User.Identity!.IsAuthenticated && !isRegistered && s.DepositAmount > 0 && (!isPrivate || hasInvite))
+                            {
+                                <div class="d-grid mt-2">
+                                    <a class="btn btn-warning btn-lg"
+                                       asp-controller="Payments" asp-action="Deposit" asp-route-sessionId="@s.Id">
+                                        Nộp tiền đặt trước
+                                    </a>
+                                </div>
+                            }
+                            @if (s != null && s.Status == AuctionSessionStatus.Ended && (ViewBag.IsWinner as bool? ?? false))
+                            {
+                                if (ViewBag.CanSettle as bool? ?? false)
+                                {
+                                    <div class="d-grid mt-2">
+                                        <a class="btn btn-warning btn-lg"
+                                           asp-controller="Payments" asp-action="Deposit"
+                                           asp-route-sessionId="@s.Id" asp-route-win="true">
+                                            Thanh toán tiền trúng (@(((decimal)ViewBag.WinAmount).ToString("N0")) đ)
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-success mt-2">
+                                        Bạn đã trúng với giá <strong>@(((decimal)ViewBag.WinAmount).ToString("N0")) đ</strong>. (Đã thanh toán.)
+                                    </div>
+                                }
+                            }
+                            @if (s.IsPrivate)
+                            {
+                                <div class="alert alert-dark d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-lock"></i>
+                                    <div>
+                                        Đây là phiên <strong>riêng tư</strong>.
+                                        @if (!User.Identity!.IsAuthenticated)
+                                        {
+                                            <div class="small m-0">Đăng nhập để biết bạn có được mời hay không.</div>
+                                        }
+                                        else if (!hasInvite && !(User.IsInRole("Admin") || userId == Model.SellerId))
+                                        {
+
+                                            <div class="small m-0 text-danger">Bạn chưa có lời mời, không thể đăng ký.</div>
+                                        }
+                                        else if (hasInvite)
+                                        {
+
+                                            <div class="small m-0 text-success">Bạn đã được mời tham gia phiên này.</div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <div class="row g-2 mt-2">
+                                <div class="col-7 col-md-8">
+                                    <form asp-controller="Watchlist" asp-action="Toggle" method="post" id="watchForm">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="itemId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-outline-danger w-100" id="watchBtn">
+                                            <i class="fa-regular fa-heart me-1"></i> Theo dõi
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="col-5 col-md-4">
+                                    <form asp-controller="Bids" asp-action="SetProxy" method="post" class="d-flex gap-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="sessionId" value="@s.Id" />
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" name="maxAmount" class="form-control" placeholder="Giá tối đa (Proxy)" />
+                                            <button class="btn btn-primary">Lưu</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                        @if (overBudget)
+                        {
+                            <div class="alert alert-warning">
+                                Giá hiện tại @highest.ToString("N0")đ cao hơn ngân sách bạn đặt (@budget.Value.ToString("N0")đ).
+                                Bạn có thể theo dõi sản phẩm hoặc xem các gợi ý phù hợp bên dưới.
+                            </div>
+                        }
+                        @if (!overBudget && canBid)
+                        {
+                            <hr />
+                            <form asp-controller="Bids" asp-action="Place" method="post" class="d-flex gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="sessionId" value="@s!.Id" />
+                                <input type="number" step="0.01" class="form-control" name="amount" id="amount" value="@(highest + minInc)" />
+                                <button class="btn btn-primary">Đặt giá</button>
+                            </form>
+                            <div id="bidAlert" class="text-danger mt-2"></div>
+                        }
+                        @if (ViewBag.BudgetSuggestions is IEnumerable<OnlineAuctionWebsite.Models.Entities.AuctionItem> sug && sug.Any())
+                        {
+                            <div class="mt-4">
+                                <h5 class="mb-2">Gợi ý phù hợp ngân sách</h5>
+                                <div class="row g-3">
+                                    @foreach (var it in sug)
+                                    {
+                                        var img = it.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.FilePath ?? "/images/placeholder.png";
+                                        <div class="col-6 col-md-4">
+                                            <div class="card h-100">
+                                                <img src="@img" class="card-img-top" alt="">
+                                                <div class="card-body">
+                                                    <div class="small text-muted">Giá khởi điểm</div>
+                                                    <div class="fw-semibold">@it.StartingPrice.ToString("N0") đ</div>
+                                                    <div class="small text-truncate" title="@it.Title">@it.Title</div>
+                                                </div>
+                                                <div class="card-footer bg-white">
+                                                    <a class="btn btn-outline-primary w-100" asp-controller="Items" asp-action="Details" asp-route-id="@it.Id">Xem</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">Chưa có phiên đấu giá.</div>
+                    }
+                </div>
+                @if (User.Identity!.IsAuthenticated && userId == Model.SellerId)
+                {
+                    <div class="alert alert-info d-flex align-items-start gap-2 mb-3">
+                        <i class="fa-solid fa-circle-info mt-1"></i>
+                        <div>
+                            <strong>Bạn là chủ tài sản</strong>, nên không thể tham gia đấu giá.
+                            Vui lòng đăng nhập bằng tài khoản khác để thử.
+                        </div>
+                    </div>
+                }
+                else if (isRegistered && !isApproved)
+                {
+                    <div class="alert alert-warning mt-2">
+                        Bạn đã đăng ký nhưng <strong>chưa nộp tiền đặt trước</strong>.
+                    </div>
+                    <a class="btn btn-warning"
+                       asp-controller="Payments" asp-action="Deposit" asp-route-sessionId="@s!.Id">
+                        Nộp tiền đặt trước
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Related items -->
+    @if (related.Any())
+    {
+        <div class="mt-4">
+            <h5 class="mb-3">Tài sản khác</h5>
+            <div class="row g-3">
+                @foreach (var it in related)
+                {
+                    var img = it.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.FilePath ?? "/images/placeholder.png";
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="card h-100">
+                            <img class="card-img-top" src="@img" alt="">
+                            <div class="card-body">
+                                <div class="small text-muted">
+                                    @{
+                                        var st = it.Sessions.OrderByDescending(x => x.StartUtc).Select(x => (DateTime?)x.StartUtc).FirstOrDefault();
+                                    }
+                                    @(st.HasValue? AsIct(st.Value) : "-")
+                                </div>
+                                <h6 class="card-title mt-1 text-truncate" title="@it.Title">@it.Title</h6>
+                                <div class="small">Giá khởi điểm: <strong>@it.StartingPrice.ToString("N0")</strong></div>
+                            </div>
+                            <div class="card-footer bg-white">
+                                <a class="btn btn-outline-danger w-100" asp-action="Details" asp-route-id="@it.Id">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+    window.__auctionCtx = {
+      itemTitle: "@Model.Title".trim(),
+      startingPrice: @Model.StartingPrice,
+      endUtc: "@(ViewBag.ActiveSession != null ? ((DateTime)ViewBag.ActiveSession.EndUtc).ToString("o") : "")"
+    };
+</script>
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script>
+        // thumbs -> main image
+        document.querySelectorAll('.thumbs img').forEach(img=>{
+            img.addEventListener('click',e=>{
+                document.getElementById('mainImg').src = e.target.dataset.full;
+                document.querySelectorAll('.thumbs img').forEach(x=>x.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+
+        // simple countdown (UTC based)
+        (function(){
+            const box = document.getElementById('cd');
+            if(!box) return;
+            let end = new Date(box.dataset.end); // ISO UTC
+            function paint(){
+                const diff = end - new Date();
+                const remain = Math.max(0, Math.floor(diff/1000));
+                const d = Math.floor(remain/86400);
+                const h = Math.floor((remain%86400)/3600);
+                const m = Math.floor((remain%3600)/60);
+                const s = remain%60;
+                const $ = id => document.getElementById(id);
+                $('cd-d').textContent=d; $('cd-h').textContent=h; $('cd-m').textContent=m; $('cd-s').textContent=s;
+                if (diff>0) requestAnimationFrame(paint);
+            }
+            paint();
+            // expose to update when server extends time
+            window.__setNewEnd = function(iso){
+                end = new Date(iso);
+                box.dataset.end = iso;
+                const el = document.getElementById('endLocal');
+                try{
+                    // chỉ cập nhật chuỗi hiển thị, server đã gửi ISO UTC
+                    const d = new Date(iso);
+                    // hiển thị giờ local của trình duyệt
+                    el && (el.textContent = d.toLocaleString('vi-VN'));
+                }catch{}
+            }
+        })();
+
+        // SignalR: one connection, join session group
+        (function(){
+            const sessionId = "@(s?.Id.ToString() ?? "")";
+            if(!sessionId || !window.signalR) return;
+
+            const conn = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/auction')
+                .withAutomaticReconnect()
+                .build();
+
+            conn.on("BidUpdated", payload => {
+                if (String(payload.sessionId) !== sessionId) return;
+                const cur = document.getElementById('currentPrice');
+                if (cur) cur.textContent = Number(payload.amount).toLocaleString('vi-VN');
+                const inp = document.getElementById('amount');
+                if (inp) inp.value = Number((payload.amount || 0) + @minInc).toString();
+            });
+
+            conn.on("BidPlaced", payload => {
+                if (String(payload.sessionId) !== sessionId) return;
+                const el = document.createElement('div');
+                el.className = "alert alert-info position-fixed top-0 end-0 m-3 shadow";
+                el.style.zIndex = 1080;
+                el.innerHTML = `<strong>${payload.bidder ?? 'Người dùng'}</strong> vừa đặt <strong>${Number(payload.amount).toLocaleString('vi-VN')}đ</strong>`;
+                document.body.appendChild(el);
+                setTimeout(()=>el.remove(), 3500);
+            });
+
+            conn.on("SessionExtended", p => {
+                if (String(p.sessionId) !== sessionId) return;
+                const iso = p.newEnd ?? p.newEndUtc;
+                if (iso) window.__setNewEnd(iso);
+            });
+
+            conn.on("Outbid", p => {
+                if (String(p.sessionId) !== sessionId) return;
+                console.log('Bạn vừa bị vượt giá', p);
+            });
+
+            conn.on("WatchPing", p => {
+                if (String(p.sessionId) !== sessionId) return;
+                console.log('Mục theo dõi thay đổi giá', p);
+            });
+
+            conn.start().then(()=>conn.invoke('JoinSession', +sessionId));
+        })();
+
+        // AJAX toggle watch
+        (function(){
+            const form = document.getElementById('watchForm');
+            if (!form) return;
+            form.addEventListener('submit', async (e)=>{
+                e.preventDefault();
+                const btn = document.getElementById('watchBtn');
+                const fd  = new FormData(form);
+                const res = await fetch(form.action, {
+                    method:'POST',
+                    headers:{'X-Requested-With':'XMLHttpRequest'},
+                    body:fd
+                });
+                const data = await res.json().catch(()=>null);
+                if (data?.ok){
+                    if (data.watching){
+                        btn.classList.remove('btn-outline-danger');
+                        btn.classList.add('btn-danger');
+                    }else{
+                        btn.classList.remove('btn-danger');
+                        btn.classList.add('btn-outline-danger');
+                    }
+                }else{
+                    form.submit(); // fallback non-ajax
+                }
+            });
+        })();
+    </script>
+    <script>
+        (function () {
+          const sessionId = '@(ViewBag.ActiveSession?.Id ?? 0)';
+          if (!sessionId || !window.signalR) return;
+
+          const conn = new signalR.HubConnectionBuilder()
+            .withUrl('/hubs/auction')
+            .withAutomaticReconnect()
+            .build();
+
+          conn.on('SessionStarted', p => {
+            if (+p.sessionId !== +sessionId) return;
+            // cách đơn giản: reload để lấy dữ liệu mới
+            location.reload();
+          });
+
+          conn.on('SessionEnded', p => {
+            if (+p.sessionId !== +sessionId) return;
+            location.reload();
+          });
+
+          conn.start().then(() => conn.invoke('JoinSession', +sessionId));
+        })();
+    </script>
+}

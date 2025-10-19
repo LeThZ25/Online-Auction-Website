@@ -1,0 +1,69 @@
+﻿@model OnlineAuctionWebsite.Models.ViewModels.AuctionCardVM
+
+@{
+    var placeholder = Url.Content("~/images/placeholder.png");
+    var cover = string.IsNullOrWhiteSpace(Model.ThumbnailUrl) ? placeholder : Model.ThumbnailUrl;
+    var st = (Model.Status ?? "").Trim().ToLowerInvariant();
+    var endIso = Model.EndUtc.HasValue ? Model.EndUtc.Value.ToString("o") : "";
+    var tags = Model.Tags?.Take(4) ?? Enumerable.Empty<string>();
+}
+
+<div class="auction-card card h-100 shadow-sm">
+    <div class="ratio ratio-4x3 bg-light">
+        <img src="@cover"
+             class="card-img-top object-fit-cover"
+             alt="@Model.Title"
+             loading="lazy"
+             decoding="async"
+             width="640" height="480"
+             onerror="this.onerror=null;this.src='@placeholder';" />
+    </div>
+
+    <div class="card-body d-flex flex-column">
+        <h6 class="card-title text-truncate" title="@Model.Title">@Model.Title</h6>
+        @if (tags.Any())
+        {
+            <div class="d-flex flex-wrap gap-1 mb-2">
+                @foreach (var t in tags)
+                {
+                    <a asp-controller="Search" asp-action="Index" asp-route-tag="@t"
+                       class="badge rounded-pill text-bg-light border small">
+                        <i class="fa-solid fa-hashtag me-1 opacity-50"></i>@t
+                    </a>
+                }
+            </div>
+        }
+        <div class="small text-muted mb-2">
+            <i class="fa-regular fa-clock me-1"></i>
+            @if (st == "live")
+            {
+                <span class="badge bg-danger-subtle border border-danger text-danger me-1">Đang diễn ra</span>
+            }
+            else if (st == "upcoming")
+            {
+                <span class="badge bg-warning-subtle border border-warning text-warning me-1">Sắp diễn ra</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary-subtle border border-secondary text-secondary me-1">Đã kết thúc</span>
+            }
+            @if (Model.IsPrivate)
+            {
+                <span class="badge bg-secondary"><i class="fa-solid fa-lock me-1"></i> Riêng tư</span>
+            }
+            <span data-countdown="@endIso"></span>
+        </div>
+
+        <div class="mt-auto">
+            <div class="d-flex justify-content-between">
+                <span class="small text-muted">Giá hiện tại</span>
+                <strong>@Model.CurrentPrice.ToString("N0") đ</strong>
+            </div>
+
+            <a class="stretched-link btn btn-outline-primary w-100 mt-2"
+               asp-controller="Items" asp-action="Details" asp-route-id="@Model.ItemId">
+                Xem chi tiết
+            </a>
+        </div>
+    </div>
+</div>

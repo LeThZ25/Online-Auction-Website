@@ -1,0 +1,222 @@
+﻿@model OnlineAuctionWebsite.Models.ViewModels.RegisterVM
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+}
+
+<style>
+    .register-wrap {
+        max-width: 980px;
+        margin: 0 auto;
+    }
+
+    .upload-box {
+        border: 2px dashed #d0d7de;
+        border-radius: .5rem;
+        padding: 1rem;
+        text-align: center;
+        background: #fafbfc;
+    }
+
+        .upload-box input[type=file] {
+            display: block;
+            margin: auto;
+        }
+
+    .muted {
+        color: #6b7280;
+        font-size: .9rem
+    }
+
+    .section-title {
+        font-weight: 700;
+        margin-top: 1.25rem
+    }
+</style>
+
+<div class="container py-4 register-wrap">
+    <h1 class="h4 text-center fw-bold mb-1">Đăng ký tài khoản</h1>
+    <div class="text-center mb-3">Bạn đã có tài khoản? <a asp-action="Login">Đăng nhập ngay</a></div>
+
+    <form asp-action="Register" method="post" enctype="multipart/form-data" class="card shadow-sm border-0">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        <div class="card-body">
+            <div asp-validation-summary="All" class="text-danger mb-2"></div>
+
+            <!-- loại tài khoản -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Loại tài khoản</label>
+                <div class="d-flex gap-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" value="Individual" asp-for="AccountType" id="acc-ind" checked />
+                        <label class="form-check-label" for="acc-ind">Cá nhân</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" value="Organization" asp-for="AccountType" id="acc-org" />
+                        <label class="form-check-label" for="acc-org">Tổ chức</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- tên -->
+            <div id="orgNameRow" class="mb-3 d-none">
+                <label asp-for="OrganizationName" class="form-label fw-semibold"></label>
+                <input asp-for="OrganizationName" class="form-control" placeholder="Tên tổ chức">
+                <span asp-validation-for="OrganizationName" class="text-danger"></span>
+            </div>
+
+            <div id="personNameRow" class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="LastName" class="form-label fw-semibold"></label>
+                    <input asp-for="LastName" class="form-control" placeholder="Họ">
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="MiddleName" class="form-label fw-semibold"></label>
+                    <input asp-for="MiddleName" class="form-control" placeholder="Tên đệm">
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="FirstName" class="form-label fw-semibold"></label>
+                    <input asp-for="FirstName" class="form-control" placeholder="Tên">
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <!-- đăng nhập -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label fw-semibold"></label>
+                    <input asp-for="Email" class="form-control" placeholder="name@domain.com">
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="Số điện thoại">
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label fw-semibold"></label>
+                    <div class="input-group">
+                        <input asp-for="Password" class="form-control" />
+                        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+                    <div class="input-group">
+                        <input asp-for="ConfirmPassword" class="form-control" />
+                        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="section-title">Thông tin cá nhân</div>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="BirthDate" class="form-label fw-semibold"></label>
+                    <input asp-for="BirthDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Gender" class="form-label fw-semibold"></label>
+                    <select asp-for="Gender" class="form-select"
+                            asp-items="Html.GetEnumSelectList<OnlineAuctionWebsite.Models.Entities.Gender>()"></select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="AddressLine" class="form-label fw-semibold"></label>
+                    <input asp-for="AddressLine" class="form-control" placeholder="Số nhà, đường...">
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Province" class="form-label fw-semibold"></label>
+                    <input asp-for="Province" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="District" class="form-label fw-semibold"></label>
+                    <input asp-for="District" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Ward" class="form-label fw-semibold"></label>
+                    <input asp-for="Ward" class="form-control">
+                </div>
+            </div>
+
+            <div class="section-title">CCCD/CMND</div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="IdNumber" class="form-label fw-semibold"></label>
+                    <input asp-for="IdNumber" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="IdIssueDate" class="form-label fw-semibold"></label>
+                    <input asp-for="IdIssueDate" type="date" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="IdIssuePlace" class="form-label fw-semibold"></label>
+                    <input asp-for="IdIssuePlace" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <div class="upload-box">
+                        <div class="mb-2 fw-semibold">@Html.DisplayNameFor(m => m.IdFront)</div>
+                        <input asp-for="IdFront" type="file" accept="image/*" />
+                        <div class="muted mt-1">(JPG/PNG ≤ 5MB)</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="upload-box">
+                        <div class="mb-2 fw-semibold">@Html.DisplayNameFor(m => m.IdBack)</div>
+                        <input asp-for="IdBack" type="file" accept="image/*" />
+                        <div class="muted mt-1">(JPG/PNG ≤ 5MB)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">Tài khoản ngân hàng</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="BankName" class="form-label fw-semibold"></label>
+                    <input asp-for="BankName" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="BankBranch" class="form-label fw-semibold"></label>
+                    <input asp-for="BankBranch" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="BankAccountNumber" class="form-label fw-semibold"></label>
+                    <input asp-for="BankAccountNumber" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="BankAccountHolder" class="form-label fw-semibold"></label>
+                    <input asp-for="BankAccountHolder" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-check mt-4">
+                <input class="form-check-input" asp-for="AcceptTerms" id="accept" />
+                <label class="form-check-label" for="accept">
+                    Tôi cam kết tuân thủ Quy chế và chịu trách nhiệm của Người tham gia đấu giá.
+                </label>
+                <span asp-validation-for="AcceptTerms" class="text-danger d-block"></span>
+            </div>
+
+            <div class="d-grid mt-3">
+                <button class="btn btn-danger btn-lg" type="submit">Đăng ký tài khoản</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function toggleNameRows(){
+          const org = document.getElementById('acc-org').checked;
+          document.getElementById('orgNameRow').classList.toggle('d-none', !org);
+          document.getElementById('personNameRow').classList.toggle('d-none', org);
+        }
+        document.getElementById('acc-org').addEventListener('change', toggleNameRows);
+        document.getElementById('acc-ind').addEventListener('change', toggleNameRows);
+        toggleNameRows();
+    </script>
+}

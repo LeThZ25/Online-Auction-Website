@@ -1,0 +1,79 @@
+﻿@model OnlineAuctionWebsite.Models.ViewModels.FeaturedAuctionsVM
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+<section class="hero py-5">
+    <div class="container py-4">
+        <div class="row align-items-center">
+            <div class="col-lg-7 text-white">
+                <h1 class="display-5 fw-bold">Nền tảng đấu giá trực tuyến</h1>
+                <p class="lead mb-4">Trải nghiệm phiên đấu giá minh bạch, realtime, dễ sử dụng — bắt đầu ngay hôm nay.</p>
+                <a class="btn btn-warning btn-lg me-2" asp-controller="Search" asp-action="Index" asp-route-status="live">
+                    Xem phiên đang diễn ra
+                </a>
+                <a class="btn btn-outline-light btn-lg" asp-controller="Items" asp-action="Create">Đăng tài sản</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="bg-white">
+  <div class="container py-4">
+    <div class="row text-center g-3">
+      <div class="col-12 col-md-4"><i class="fa-regular fa-clock fa-lg text-primary"></i><div class="fw-semibold mt-1">Realtime</div><div class="text-muted small">Cập nhật giá theo thời gian thực</div></div>
+      <div class="col-12 col-md-4"><i class="fa-solid fa-shield-halved fa-lg text-primary"></i><div class="fw-semibold mt-1">Minh bạch</div><div class="text-muted small">Lịch sử giá rõ ràng, công khai</div></div>
+      <div class="col-12 col-md-4"><i class="fa-solid fa-mobile-screen fa-lg text-primary"></i><div class="fw-semibold mt-1">Dễ dùng</div><div class="text-muted small">Tối ưu cho điện thoại</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="container mt-5 mb-0 pb-0">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="section-title m-0">Phiên đang diễn ra</h3>
+        <a class="text-decoration-none" asp-controller="Search" asp-action="Index" asp-route-status="live">Xem tất cả</a>
+    </div>
+    @if (Model?.Live?.Any() == true)
+    {
+        @await Html.PartialAsync("_AuctionSlider", Model.Live,
+        new ViewDataDictionary(ViewData) { { "sliderId", "liveSlider" } })
+        }
+    else
+    {
+
+        <p class="text-muted">Chưa có phiên đang diễn ra.</p>
+    }
+</div>
+
+<div class="container mt-5 mb-0 pb-0">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="section-title m-0">Sắp diễn ra</h3>
+        <a class="text-decoration-none" asp-controller="Search" asp-action="Index" asp-route-status="upcoming">Xem tất cả</a>
+    </div>
+    @if (Model?.Upcoming?.Any() == true)
+    {
+        @await Html.PartialAsync("_AuctionSlider", Model.Upcoming,
+        new ViewDataDictionary(ViewData) { { "sliderId", "upcomingSlider" } })
+        }
+    else
+    {
+
+        <p class="text-muted">Chưa có phiên nào sắp diễn ra.</p>
+    }
+</div>
+
+<div class="container mt-5 mb-0 pb-0">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="section-title m-0">Tài sản mới</h3>
+        <a class="text-decoration-none" asp-controller="Search" asp-action="Index">Xem tất cả</a>
+    </div>
+    @if (Model?.Newest?.Any() == true)
+    {
+        @await Html.PartialAsync("_AuctionSlider", Model.Newest,
+        new ViewDataDictionary(ViewData) { { "sliderId", "newestSlider" } })
+        }
+    else
+    {
+
+        <p class="text-muted">Chưa có tài sản mới.</p>
+    }
+</div>

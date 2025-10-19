@@ -1,0 +1,27 @@
+﻿@model OnlineAuctionWebsite.Controllers.BankVM
+@{
+    ViewData["Title"] = "Chuyển khoản";
+}
+<div class="container py-4">
+    <h3 class="mb-3">Chuyển khoản ngân hàng</h3>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="mb-2"><strong>Người thụ hưởng:</strong> @Model.AccountName</div>
+                    <div class="mb-2"><strong>Số tài khoản:</strong> @Model.AccountNumber</div>
+                    <div class="mb-2"><strong>Ngân hàng:</strong> @Model.BankName</div>
+                    <div class="mb-2"><strong>Số tiền:</strong> @Model.Amount.ToString("N0") đ</div>
+                    <div class="mb-2"><strong>Nội dung chuyển khoản:</strong> <code>@Model.TransferNote</code></div>
+                    <p class="text-muted small">Vui lòng chuyển đúng nội dung để hệ thống ghi nhận.</p>
+                </div>
+            </div>
+            <form asp-action="BankConfirm" method="post" class="mt-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="paymentId" value="@Model.PaymentId" />
+                <button class="btn btn-success">Tôi đã chuyển khoản</button>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary ms-2">Về trang chủ</a>
+            </form>
+        </div>
+    </div>
+</div>

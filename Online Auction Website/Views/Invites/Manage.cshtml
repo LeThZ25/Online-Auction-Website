@@ -1,0 +1,113 @@
+﻿@using OnlineAuctionWebsite.Models.Entities
+@model List<SessionInvite>
+
+@{
+    var s = (AuctionSession)ViewBag.Session;
+    var session = (OnlineAuctionWebsite.Models.Entities.AuctionSession)ViewBag.Session;
+    string LinkOf(SessionInvite i) => Url.ActionLink("Accept", "Invites", new { token = i.Token })!;
+}
+<div class="container my-4">
+    <h1 class="h5 mb-3">Quản lý lời mời – @s.Item.Title</h1>
+
+    @using (Html.BeginForm("TogglePrivacy", "Invites", FormMethod.Post, new { @class = "mb-2" }))
+    {
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="sessionId" value="@session.Id" />
+
+        <div class="form-check form-switch mb-3">
+            @Html.CheckBox(
+            "isPrivate",
+                session.IsPrivate,
+                new { @class = "form-check-input", id = "isPrivate" }
+                )
+        <label for="isPrivate">
+			Phiên riêng tư (chỉ ai có lời mời mới thấy & tham gia) hoặc công khai (bất kỳ ai cũng thấy & tham gia).
+        </label>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Lưu</button>
+
+        @* Nút nhanh: đặt riêng tư *@
+        <button type="submit"
+                formaction="@Url.Action("MakePrivate", "Invites")"
+                class="btn btn-outline-secondary">
+            Đặt riêng tư
+        </button>
+
+        @* Nút nhanh: đặt công khai *@
+        <button type="submit"
+                formaction="@Url.Action("MakePublic", "Invites")"
+                class="btn btn-outline-secondary">
+            Đặt công khai
+        </button>
+    </div>
+        }
+    <div class="card p-3 mb-4">
+        <form method="post" asp-action="Create" class="row g-2">
+            <input type="hidden" name="sessionId" value="@s.Id" />
+            <div class="col-md-4">
+                <input class="form-control" name="userName" placeholder="Username (nếu đã có tài khoản)" />
+            </div>
+            <div class="col-md-4">
+                <input class="form-control" name="email" type="email" placeholder="Email (mời qua email)" />
+            </div>
+            <div class="col-md-3">
+                <input class="form-control" name="expiresAt" type="datetime-local" />
+            </div>
+            <div class="col-md-1 d-grid">
+                <button class="btn btn-success">Mời</button>
+            </div>
+        </form>
+        <div class="small text-muted mt-2">Có thể điền 1 trong 2: Username hoặc Email. Không bắt buộc cả hai.</div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Người được mời</th>
+                            <th>Email</th>
+                            <th>Hạn</th>
+                            <th>Trạng thái</th>
+                            <th>Link</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var i in Model)
+                        {
+                            var status = i.RevokedAt != null ? "Đã thu hồi"
+                            : i.AcceptedAt != null ? "Đã chấp nhận"
+                            : (i.ExpiresAt <= DateTime.UtcNow ? "Hết hạn" : "Đang hiệu lực");
+                            <tr>
+                                <td>@(i.Invitee?.UserName ?? "(chưa gắn user)")</td>
+                                <td>@(i.Invitee?.Email ?? i.InviteeEmail)</td>
+                                <td>@i.ExpiresAt.ToLocalTime()</td>
+                                <td>@status</td>
+                                <td style="max-width:260px;word-break:break-all;">
+                                    <input class="form-control form-control-sm" readonly value="@LinkOf(i)" onclick="this.select();" />
+                                </td>
+                                <td class="text-end">
+                                    @if (i.RevokedAt == null && i.AcceptedAt == null && i.ExpiresAt > DateTime.UtcNow)
+                                    {
+                                        <form method="post" asp-action="Revoke" class="d-inline">
+                                            <input type="hidden" name="id" value="@i.Id" />
+                                            <button class="btn btn-sm btn-outline-danger">Thu hồi</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (!Model.Any())
+                {
+                    <div class="text-muted">Chưa có lời mời nào.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

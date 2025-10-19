@@ -1,0 +1,103 @@
+﻿@using OnlineAuctionWebsite.Models.ViewModels
+@model IEnumerable<AuctionCardVM>
+@{
+    string sliderId = (ViewData["SliderId"] as string) ?? ("sld-" + Guid.NewGuid().ToString("N"));
+    string title = ViewData["Title"] as string ?? "";
+    string seeAll = ViewData["SeeAllHref"] as string;
+}
+
+@if (Model != null && Model.Any())
+{
+    <section class="mb-5">
+        <div class="container">
+            <div class="d-flex align-items-end justify-content-between mb-3">
+                <h2 class="h5 m-0">@title</h2>
+                @if (!string.IsNullOrWhiteSpace(seeAll))
+                {
+                    <a class="small" href="@seeAll">Xem tất cả</a>
+                }
+            </div>
+
+            <div class="position-relative">
+                <div class="swiper" id="@sliderId">
+                    <div class="swiper-wrapper">
+                        @foreach (var it in Model)
+                        {
+                            <div class="swiper-slide" style="height:auto;display:flex;justify-content:center;">
+                                <partial name="_AuctionCard" model="it" />
+                            </div>
+                        }
+                    </div>
+
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-pagination d-md-none"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        (function () {
+          function init() {
+            if (!window.Swiper) { setTimeout(init, 120); return; }
+            const id = '#@sliderId';
+            const el = document.querySelector(id);
+            if (!el || el._inited) return;
+
+            // Don’t init autoplay if there’s <= 1 slide
+            if (el.querySelectorAll('.swiper-slide').length <= 1) return;
+
+            el._inited = true;
+
+            const swiper = new Swiper(id, {
+              slidesPerView: 1.1,
+              spaceBetween: 16,
+              loop: false,                       // keep false so we can “bounce”
+              speed: 550,                        // slide animation speed
+              autoplay: {
+                delay: 2500,                     // time each slide stays
+                disableOnInteraction: false,     // keep running after clicks/drags
+                pauseOnMouseEnter: true,         // pause when hover (desktop)
+                reverseDirection: false          // start moving forward
+              },
+              pagination: { el: id + ' .swiper-pagination', clickable: true },
+              navigation: {
+                nextEl: id + ' .swiper-button-next',
+                prevEl: id + ' .swiper-button-prev'
+              },
+              breakpoints: {
+                576: { slidesPerView: 2, spaceBetween: 16 },
+                768: { slidesPerView: 3, spaceBetween: 16 },
+                992: { slidesPerView: 4, spaceBetween: 16 }
+              }
+            });
+
+            // “Ping-pong” behavior: when reaching an edge, flip direction and keep autoplaying
+            swiper.on('reachEnd', () => {
+              if (swiper.params.autoplay) {
+                swiper.params.autoplay.reverseDirection = true;
+                swiper.autoplay.start();
+              }
+            });
+            swiper.on('reachBeginning', () => {
+              if (swiper.params.autoplay) {
+                swiper.params.autoplay.reverseDirection = false;
+                swiper.autoplay.start();
+              }
+            });
+
+            // Safety: if page regains focus after being hidden, resume autoplay
+            document.addEventListener('visibilitychange', () => {
+              if (!document.hidden && swiper.params.autoplay) swiper.autoplay.start();
+            });
+          }
+          if (document.readyState !== 'loading') init();
+          else document.addEventListener('DOMContentLoaded', init);
+        })();
+    </script>
+}
+else
+{
+    <div class="container mb-5"><div class="text-muted small">Chưa có mục nào.</div></div>
+}

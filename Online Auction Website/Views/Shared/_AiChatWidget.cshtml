@@ -1,0 +1,44 @@
+﻿<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<!-- Nút nổi -->
+<button id="aiFab"
+        type="button"
+        class="ai-fab"
+        aria-controls="aiPanel"
+        aria-expanded="false">
+    🤖 Trợ lý AI
+</button>
+
+<!-- Overlay (bấm để đóng) -->
+<div id="aiOverlay" class="ai-overlay" hidden></div>
+
+<!-- Panel chat -->
+<div id="aiPanel" class="ai-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle" hidden>
+    <div class="ai-header">
+        <h3 id="aiTitle">Trợ lý AI</h3>
+        <button id="aiClose" class="btn-close" aria-label="Đóng"></button>
+    </div>
+
+    <div class="ai-body">
+        <div id="aiChatBody" class="ai-messages">
+            <div class="bubble bubble-ai">
+                Xin chào 👋 Mình là trợ lý AI của trang, có thể trả lời về đấu giá & tư vấn sản phẩm.
+            </div>
+        </div>
+
+        <!-- Gợi ý nhanh -->
+        <div class="ai-suggest">
+            <button class="chip" data-q="Giới thiệu về trang web">Giới thiệu về trang web</button>
+            <button class="chip" data-q="Phiên đang diễn ra?">Phiên đang diễn ra?</button>
+            <button class="chip" data-q="Cách tham gia?">Cách tham gia?</button>
+        </div>
+
+        <!-- Nhập chat -->
+        <div class="ai-input">
+            <textarea id="aiInput" rows="1" placeholder="Nhập câu hỏi..."></textarea>
+            <button id="aiSendBtn" class="btn-send">Gửi</button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/ai-widget.js" defer asp-append-version="true"></script>

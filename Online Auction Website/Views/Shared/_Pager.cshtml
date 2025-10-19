@@ -1,0 +1,22 @@
+﻿@model OnlineAuctionWebsite.Models.ViewModels.PagerModel
+@{
+    if (Model.TotalPages <= 1)
+    {
+        <text></text>
+        ; return;
+    }
+    var routeValues = new Dictionary<string, string>();
+    foreach (var kv in Context.Request.Query) routeValues[kv.Key] = kv.Value!;
+}
+
+<nav class="mt-3">
+    <ul class="pagination pager">
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            routeValues["page"] = i.ToString();
+            <li class="page-item @(Model.Page == i ? "active" : "")">
+                <a class="page-link" asp-all-route-data="routeValues">@i</a>
+            </li>
+        }
+    </ul>
+</nav>

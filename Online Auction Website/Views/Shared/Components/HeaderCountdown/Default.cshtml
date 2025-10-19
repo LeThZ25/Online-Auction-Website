@@ -1,0 +1,9 @@
+﻿@model OnlineAuctionWebsite.Models.ViewModels.HeaderCountdownVM
+<li class="nav-item d-none d-lg-block">
+    <span class="nav-link small opacity-75 d-flex align-items-center">
+        <i class="fa-regular fa-clock me-1"></i>
+        <span id="headerTimer"
+              data-mode="@Model.Mode"
+              data-target="@Model.TargetUtc?.ToString("o")">--:--:--</span>
+    </span>
+</li>

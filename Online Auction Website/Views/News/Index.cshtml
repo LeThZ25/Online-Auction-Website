@@ -1,0 +1,64 @@
+﻿@model IEnumerable<OnlineAuctionWebsite.Models.News>
+@{
+    ViewData["Title"] = "Quản trị tin tức";
+    var q = ViewBag.Q as string;
+    int page = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="m-0">@ViewData["Title"]</h2>
+    <a class="btn btn-primary" asp-action="Create"><i class="fa fa-plus me-1"></i>Tạo bài viết</a>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+    <div class="col">
+        <input class="form-control" type="search" name="q" value="@q" placeholder="Tìm tiêu đề/nội dung..." />
+    </div>
+    <div class="col-auto"><button class="btn btn-outline-secondary">Tìm</button></div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th style="width:55%">Tiêu đề</th>
+                <th>Ngày tạo</th>
+                <th class="text-end">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var n in Model)
+            {
+                <tr>
+                    <td>@n.Title</td>
+                    <td>@n.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" asp-controller="Home" asp-action="Article" asp-route-id="@n.Id" target="_blank">Xem</a>
+                        <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@n.Id">Sửa</a>
+                        <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@n.Id">Xóa</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (totalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(page <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-q="@q" asp-route-page="@(page - 1)">«</a>
+            </li>
+            @for (int p = 1; p <= totalPages; p++)
+            {
+                <li class="page-item @(p == page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-q="@q" asp-route-page="@p">@p</a>
+                </li>
+            }
+            <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-q="@q" asp-route-page="@(page + 1)">»</a>
+            </li>
+        </ul>
+    </nav>
+}

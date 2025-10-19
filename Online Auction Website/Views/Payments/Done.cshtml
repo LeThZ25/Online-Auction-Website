@@ -1,0 +1,16 @@
+﻿@model OnlineAuctionWebsite.Models.Entities.Payment
+@{
+    ViewData["Title"] = "Thanh toán thành công";
+}
+<div class="container py-4">
+    <div class="alert alert-success"><i class="fa fa-check-circle me-1"></i> Thanh toán thành công!</div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div><strong>Số tiền:</strong> @Model.Amount.ToString("N0") đ</div>
+            <div><strong>Phiên:</strong> #@Model.SessionId</div>
+            <div><strong>Phương thức:</strong> @Model.Method</div>
+            <div><strong>Thời gian:</strong> @Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+            <a class="btn btn-primary mt-3" asp-controller="Items" asp-action="Details" asp-route-id="@Model.Session!.ItemId">Quay lại tài sản</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,76 @@
+﻿@model OnlineAuctionWebsite.Models.ViewModels.NewsDetailVM
+@{
+    ViewData["Title"] = Model.Title;
+    var latest = ViewBag.Latest as IEnumerable<OnlineAuctionWebsite.Models.ViewModels.NewsListItemVM>
+                 ?? Enumerable.Empty<OnlineAuctionWebsite.Models.ViewModels.NewsListItemVM>();
+}
+<style>
+    .article-hero {
+        --g1: #153b5f;
+        --g2: #1d5a8a;
+        background: linear-gradient(135deg,var(--g1),var(--g2));
+        color: #fff
+    }
+
+    .latest li + li {
+        border-top: 1px solid #eee
+    }
+</style>
+
+<section class="article-hero py-4">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb m-0">
+                <!-- EXPLICIT Home link -->
+                <li class="breadcrumb-item">
+                    <a class="link-light text-decoration-none"
+                       asp-controller="Home" asp-action="Index">Trang chủ</a>
+                </li>
+                <!-- EXPLICIT link to the news list -->
+                <li class="breadcrumb-item">
+                    <a class="link-light text-decoration-none"
+                       asp-controller="NewsRead" asp-action="Index">Tin tức</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Chi tiết</li>
+            </ol>
+        </nav>
+        <h1 class="h3 fw-bold m-0">@Model.Title</h1>
+        <div class="opacity-75">
+            <i class="fa-regular fa-calendar me-1"></i>@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+        </div>
+    </div>
+</section>
+
+<div class="container my-4 my-lg-5">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-3 p-lg-4">
+                    <article>
+                        @Html.Raw(Model.ContentHtml)
+                    </article>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="fw-semibold mb-2">Bài viết mới</div>
+                    <ul class="list-unstyled latest m-0">
+                        @foreach (var i in latest)
+                        {
+                            <li class="py-2">
+                                <div class="small text-muted">@i.CreatedAt.ToLocalTime().ToString("dd/MM")</div>
+                                <a class="text-decoration-none"
+                                   asp-controller="NewsRead" asp-action="Article" asp-route-id="@i.Id">
+                                    @i.Title
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

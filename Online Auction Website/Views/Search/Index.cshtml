@@ -1,0 +1,76 @@
+﻿@model IEnumerable<OnlineAuctionWebsite.Models.ViewModels.AuctionCardVM>
+@inject OnlineAuctionWebsite.Services.ICategoryService CategoryService
+@{
+    ViewData["Title"] = "Tài sản đấu giá";
+    var cats = await CategoryService.GetAllAsync();
+    int? selected = ViewBag.SelectedCategoryId as int?;
+    string q = Context.Request.Query["q"];
+    string status = Context.Request.Query["status"];
+    int page = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="section-title m-0">Tài sản đấu giá</h2>
+        <form class="d-flex" method="get">
+            <input name="q" value="@q" class="form-control me-2" placeholder="Tìm theo tiêu đề..." />
+            <button class="btn btn-warning">Tìm</button>
+        </form>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="sidebar-sticky">
+                <div class="card">
+                    <div class="card-header fw-semibold">Danh mục</div>
+                    <div class="list-group list-group-flush">
+                        <a class="list-group-item list-group-item-action @(selected == null ? "active" : "")"
+                           asp-controller="Search" asp-action="Index" asp-route-q="@q">Tất cả</a>
+                        @foreach (var c in cats)
+                        {
+                            <a class="list-group-item list-group-item-action @(selected==c.Id ? "active" : "")"
+                               asp-controller="Search" asp-action="Index"
+                               asp-route-categoryId="@c.Id" asp-route-q="@q">@c.Name</a>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header fw-semibold">Trạng thái</div>
+                    <div class="card-body d-flex flex-wrap gap-2">
+                        <a class="filter-chip @(string.IsNullOrEmpty(status) ? "active" : "")"
+                           asp-controller="Search" asp-action="Index" asp-route-categoryId="@selected" asp-route-q="@q">Tất cả</a>
+                        <a class="filter-chip @(status == "live" ? "active" : "")"
+                           asp-controller="Search" asp-action="Index" asp-route-categoryId="@selected" asp-route-status="live" asp-route-q="@q">Đang diễn ra</a>
+                        <a class="filter-chip @(status == "upcoming" ? "active" : "")"
+                           asp-controller="Search" asp-action="Index" asp-route-categoryId="@selected" asp-route-status="upcoming" asp-route-q="@q">Sắp diễn ra</a>
+                        <a class="filter-chip @(status == "ended" ? "active" : "")"
+                           asp-controller="Search" asp-action="Index" asp-route-categoryId="@selected" asp-route-status="ended" asp-route-q="@q">Đã kết thúc</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid -->
+        <div class="col-lg-9">
+            @if (Model?.Any() == true)
+            {
+                <div class="row g-3">
+                    @foreach (var card in Model)
+                    {
+                        <div class="col-6 col-md-4">
+                            <partial name="~/Views/Shared/_AuctionCard.cshtml" model="card" />
+                        </div>
+                    }
+                </div>
+
+                <partial name="~/Views/Shared/_Pager.cshtml" model="new OnlineAuctionWebsite.Models.ViewModels.PagerModel { Page = page, TotalPages = totalPages }" />
+            }
+            else
+            {
+                <div class="alert alert-light border">Không tìm thấy kết quả phù hợp.</div>
+            }
+        </div>
+    </div>
+</div>

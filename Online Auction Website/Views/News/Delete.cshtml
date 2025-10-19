@@ -1,0 +1,14 @@
+﻿@model OnlineAuctionWebsite.Models.News
+@{
+    ViewData["Title"] = "Xóa bài viết";
+}
+<h2 class="mb-3">@ViewData["Title"]</h2>
+<div class="alert alert-warning">
+    Bạn có chắc muốn xóa bài viết: <strong>@Model.Title</strong> ?
+</div>
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <button class="btn btn-danger">Xóa</button>
+    <a class="btn btn-outline-secondary ms-2" asp-action="Index">Hủy</a>
+</form>

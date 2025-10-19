@@ -1,0 +1,269 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using OnlineAuctionWebsite.Models.Entities
+@inject OnlineAuctionWebsite.Services.ICategoryService CategoryService
+@{
+    var cats = await CategoryService.GetAllAsync();
+}
+@inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+@{
+    var title = ViewData["Title"] as string ?? "Online LeTh Auction Website";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@title - Online Auction</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/auth.css" />
+
+    <style>
+      .auction-card .ratio { aspect-ratio: 4/3; }
+      .auction-card img { object-fit: cover; width: 100%; height: 100%; }
+      /* slider: slide không phóng to full màn */
+      .swiper-slide { display:flex; justify-content:center; }
+      .swiper-slide .auction-card { max-width: 320px; width: 100%; }
+    </style>
+</head>
+@await Html.PartialAsync("_AiChatWidget")
+<body class="no-nav-spacer">
+    <header class="shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top shadow">
+            <div class="container">
+                <a class="navbar-brand fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/logo.png" alt="Logo" class="brand-logo me-2" />
+                </a>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                        <!-- Dropdown Tài sản đấu giá -->
+                        <li class="nav-item dropdown fade-slide">
+                            <a class="nav-link dropdown-toggle" href="#" id="assetsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Tài sản đấu giá
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="assetsDropdown">
+                                @foreach (var c in cats)
+                                {
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Search" asp-action="Index"
+                                           asp-route-categoryId="@c.Id">
+                                            @c.Name
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </li>
+
+                        <!-- Dropdown Phiên đấu giá -->
+                        <li class="nav-item dropdown fade-slide">
+                            <a class="nav-link dropdown-toggle" href="#" id="sessionsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Phiên đấu giá
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="sessionsDropdown">
+                                <li><a class="dropdown-item" asp-controller="Search" asp-action="Index" asp-route-status="upcoming">Phiên sắp đấu giá</a></li>
+                                <li><a class="dropdown-item" asp-controller="Search" asp-action="Index" asp-route-status="live">Phiên đang diễn ra</a></li>
+                                <li><a class="dropdown-item" asp-controller="Search" asp-action="Index" asp-route-status="ended">Phiên đã kết thúc</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Các mục khác -->
+                        <li class="nav-item fade-slide">
+                            <a class="nav-link" asp-controller="NewsRead" asp-action="Index">Tin tức</a>
+                        </li>
+                        <li class="nav-item fade-slide"><a class="nav-link" asp-controller="Home" asp-action="About">Giới thiệu</a></li>
+                        <li class="nav-item fade-slide"><a class="nav-link" asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
+                        
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item fade-slide">
+                                <a class="nav-link" asp-controller="News" asp-action="Index"> Quản trị tin tức
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Đồng hồ -->
+                        @await Component.InvokeAsync("HeaderCountdown")
+                    </ul>
+
+                    <!-- Form tìm kiếm -->
+                    <form class="d-flex me-3" asp-controller="Search" asp-action="Index" method="get">
+                        <input class="form-control me-2" type="search" name="q" placeholder="Tìm kiếm..." />
+                        <button class="btn btn-outline-light" type="submit">🔍</button>
+                    </form>
+
+                    <!-- Khu vực tài khoản -->
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-shrink-0">
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="container mt-3">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @ok
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["Info"] is string info)
+        {
+            <div class="container mt-3">
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    @info
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["Error"] is string err)
+        {
+            <div class="container mt-3">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @err
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer text-light bg-dark">
+        <div class="container py-5 position-relative">
+            <div class="row g-4">
+
+                <!-- Company / Contact -->
+                <div class="col-lg-4">
+                    <div class="h5 mb-3">Công ty đấu giá hợp danh LeTh</div>
+                    <ul class="list-unstyled small opacity-75 mb-3">
+                        <li><i class="fa-regular fa-id-card me-2"></i>Mã số thuế: 123456568</li>
+                        <li><i class="fa-solid fa-location-dot me-2"></i>Thái Nguyên, Việt Nam</li>
+                        <li><i class="fa-solid fa-phone me-2"></i>091234567</li>
+                        <li><i class="fa-solid fa-envelope me-2"></i>support@auctionsite.local</li>
+                    </ul>
+                </div>
+
+                <!-- About -->
+                <div class="col-6 col-lg-2">
+                    <div class="fw-semibold mb-3">Về chúng tôi</div>
+                    <ul class="list-unstyled footer-links">
+                        <li><a asp-controller="Home" asp-action="About">Giới thiệu</a></li>
+                        <li><a asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
+                        <li><a asp-controller="Search" asp-action="Index">Tài sản đấu giá</a></li>
+                    </ul>
+                </div>
+
+                <!-- Policies -->
+                <div class="col-6 col-lg-2">
+                    <div class="fw-semibold mb-3">Chính sách</div>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="#">Quy chế hoạt động</a></li>
+                        <li><a href="#">Giải quyết tranh chấp</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <!-- Newsletter + badges -->
+                <div class="col-lg-4">
+                    <div class="fw-semibold mb-3">Tham gia nhận tin</div>
+                    <form class="newsletter d-flex gap-2" method="post"
+                          asp-controller="Home" asp-action="Subscribe">
+                        @Html.AntiForgeryToken()
+                        <input type="email" name="email" required
+                               class="form-control form-control-lg newsletter-input"
+                               placeholder="Nhập email" />
+                        <button class="btn btn-danger btn-lg px-4" type="submit">Đăng ký</button>
+                    </form>
+
+                    <div class="d-flex align-items-center gap-3 flex-wrap mt-3 store-badges">
+                        <a class="btn btn-outline-light btn-sm px-3" href="#" role="button">
+                            <i class="fa-brands fa-apple me-1"></i> App Store
+                        </a>
+                        <a class="btn btn-outline-light btn-sm px-3" href="#" role="button">
+                            <i class="fa-brands fa-google-play me-1"></i> Google Play
+                        </a>
+                        <span class="badge bg-success bg-opacity-25 text-success border border-success">
+                            <i class="fa-solid fa-shield-heart me-1"></i>Đã đăng ký Bộ Công Thương
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-secondary border-opacity-25 my-4" />
+
+            <div class="d-flex flex-column flex-lg-row justify-content-between small opacity-75">
+                <div>© @DateTime.Now.Year Công ty đấu giá hợp danh LeTh</div>
+                <div>Powered by <a class="link-light text-decoration-none" href="#">AuctionSite</a></div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/countdown.js"></script>
+    <script>
+        (function () {
+          const el = document.getElementById('headerTimer');
+          if (!el) return;
+
+          const mode = el.dataset.mode || "clock";
+          const iso = el.dataset.target;
+
+          function pad(n){ return String(n).padStart(2,'0'); }
+
+          // fallback: live clock (ICT)
+          function startClock() {
+            const fmt = new Intl.DateTimeFormat('vi-VN', { timeStyle: 'medium', hour12: false, timeZone: 'Asia/Bangkok' });
+            const tick = () => el.textContent = fmt.format(new Date());
+            tick(); setInterval(tick, 1000);
+          }
+
+          if (mode === "clock" || !iso) { startClock(); return; }
+
+          // countdown to target (UTC)
+          const target = new Date(iso).getTime();
+          function tick() {
+            const now = Date.now();
+            let s = Math.floor((target - now) / 1000);
+            if (s <= 0) { el.textContent = (mode === "end" ? "Đã kết thúc" : "Đến giờ"); return; }
+
+            const days = Math.floor(s / 86400); s %= 86400;
+            const h = Math.floor(s / 3600); s %= 3600;
+            const m = Math.floor(s / 60);   const sec = s % 60;
+
+            // Show "d HH:MM:SS" if there are days
+            el.textContent = (days > 0 ? days + "d " : "") + pad(h) + ":" + pad(m) + ":" + pad(sec);
+          }
+          tick(); setInterval(tick, 1000);
+        })();
+    </script>
+    <script>
+        function updateNavOffset() {
+          const nav = document.querySelector('.navbar.fixed-top');
+          if (!nav) return;
+          const h = nav.getBoundingClientRect().height;
+          document.documentElement.style.setProperty('--nav-height', h + 'px');
+        }
+        window.addEventListener('load', updateNavOffset);
+        window.addEventListener('resize', updateNavOffset);
+        const navEl = document.querySelector('.navbar.fixed-top');
+        if (navEl && 'ResizeObserver' in window) {
+          new ResizeObserver(updateNavOffset).observe(navEl);
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <script src="~/js/ai-helpers.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
