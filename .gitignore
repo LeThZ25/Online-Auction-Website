@@ -4,6 +4,9 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # User-specific files
+bin/
+obj/
+.vs/
 *.rsuser
 *.suo
 *.user
@@ -15,6 +18,9 @@
 
 # Mono auto generated files
 mono_crash.*
+
+# Logs
+*.log
 
 # Build results
 [Dd]ebug/
@@ -178,6 +184,7 @@ DocProject/Help/html
 
 # Click-Once directory
 publish/
+artifacts/
 
 # Publish Web Output
 *.[Pp]ublish.xml
@@ -361,3 +368,15 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Secrets & local config
+appsettings.Development.json
+appsettings.Local.json
+*.secrets.json
+
+# Frontend caches (if any)
+node_modules/
+*.cache/
+
+# Static output
+wwwroot/**/dist/
